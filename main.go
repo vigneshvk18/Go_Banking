@@ -3,13 +3,27 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
+	"syscall"
+
+	"golang.org/x/term"
 )
-func Writebalance(balance float64){
-	balanceText := fmt.Sprintf("%.2f", balance)
-  os.WriteFile("balance.txt", []byte(balanceText), 0644)
+
+const accbalancefile = "balance.txt"
+
+func Readbalance() float64 {
+	data, _ := os.ReadFile(accbalancefile)
+	balanceText := string(data)
+	balance, _ := strconv.ParseFloat(balanceText, 64)
+	return balance
 }
 
-var AccountBalance = 1000.0
+func Writebalance(balance float64) {
+	balanceText := fmt.Sprintf("%.2f", balance)
+	os.WriteFile(accbalancefile, []byte(balanceText), 0644)
+}
+
+var AccountBalance = Readbalance()
 var UserId, Password string
 
 func main() {
@@ -17,8 +31,13 @@ func main() {
 	fmt.Print("Please enter your user id:")
 	fmt.Scanln(&UserId)
 	fmt.Print("Please enter your password:")
-	fmt.Scan(&Password)
-	
+	//fmt.Scan(&Password)
+
+	//fmt.Print("Please enter your password: ")
+	bytePassword, _ := term.ReadPassword(int(syscall.Stdin))
+	Password = string(bytePassword)
+	//fmt.Println()
+
 	if UserId == "admin" && Password == "admin" {
 		fmt.Println("Welcome to Go_Bank")
 		fmt.Println("What do you want to do?")
@@ -30,7 +49,7 @@ func main() {
 		fmt.Println("Invalid User Id or Password")
 		return
 	}
-	
+
 	var choice int
 	fmt.Print("Please enter your choice:")
 	fmt.Scan(&choice)
@@ -38,17 +57,17 @@ func main() {
 
 	switch choice {
 	case 1:
-			fmt.Println("Your account balance is:", AccountBalance)
+		fmt.Println("Your account balance is:", AccountBalance)
 	case 2:
-			var depositAmount float64
-			fmt.Print("Please enter the amount to be deposit: ")
-		  fmt.Scan(&depositAmount)
-	 		if depositAmount <=0 {
-				fmt.Println("Invalid amount")
-			} else {
+		var depositAmount float64
+		fmt.Print("Please enter the amount to be deposit: ")
+		fmt.Scan(&depositAmount)
+		if depositAmount <= 0 {
+			fmt.Println("Invalid amount")
+		} else {
 			AccountBalance += depositAmount
 			fmt.Println("Your new account balance is:", AccountBalance)
-			}
+		}
 		Writebalance(AccountBalance)
 	case 3:
 		fmt.Print("please enter the amount to be withdrawn: ")
@@ -59,9 +78,9 @@ func main() {
 		} else {
 			AccountBalance -= withdrawAmount
 			fmt.Println("Your new balance is", AccountBalance)
-		}		
+		}
 		Writebalance(AccountBalance)
-		default:
+	default:
 		fmt.Println("Thank you for using Go Bank")
 	}
 }
